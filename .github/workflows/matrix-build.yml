@@ -1,0 +1,49 @@
+name: CI Matrix Build (5d7dc9a)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']  # >= 3 variants
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: matrix-5d7dc9a
+        run: |
+          echo "Building for Python ${{ matrix.python-version }} on ${{ runner.os }}"
+
+      - name: Generate build artifact
+        run: |
+          mkdir -p dist
+          cat > dist/build-info-${{ matrix.python-version }}.json <<'JSON'
+          {
+            "id": "5d7dc9a",
+            "purpose": "matrix artifact demo",
+            "timestamp": "${{ github.run_id }}",
+            "python": "${{ matrix.python-version }}",
+            "os": "${{ runner.os }}"
+          }
+          JSON
+          # Ensure non-empty
+          test -s dist/build-info-${{ matrix.python-version }}.json
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-5d7dc9a-py${{ matrix.python-version }}
+          path: dist/build-info-${{ matrix.python-version }}.json
+          if-no-files-found: error
